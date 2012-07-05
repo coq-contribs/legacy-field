@@ -1,0 +1,12 @@
+-R . LegacyField
+-R ../LegacyRing LegacyRing
+-I ../LegacyRing
+field.ml4
+legacy_field_plugin.mllib
+LegacyField_Compl.v
+LegacyField_Tactic.v
+LegacyField_Theory.v
+LegacyField.v
+LegacyRfield.v
+LegacyQfield.v
+test_field.v
