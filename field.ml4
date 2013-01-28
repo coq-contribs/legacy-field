@@ -170,7 +170,7 @@ let guess_theory env evc = function
       errorlabstrm "Field:" (str" All the terms must have the same type")
     else
       lookup env t
-  | [] -> anomaly "Field: must have a non-empty constr list here"
+  | [] -> anomaly ~label:"Field" (Pp.str "must have a non-empty constr list here")
 
 (* Guesses the type and calls Field_Term with the right theory *)
 let field_term l g =
