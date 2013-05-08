@@ -41,7 +41,7 @@ let constr_of_opt a opt =
 module Cmap = Map.Make(struct type t = constr let compare = constr_ord end)
 
 (* Table of theories *)
-let th_tab = ref (Cmap.empty : constr Cmap.t)
+let th_tab = Summary.ref ~name:"field" (Cmap.empty : constr Cmap.t)
 
 let lookup env typ =
   try Cmap.find typ !th_tab
@@ -49,15 +49,6 @@ let lookup env typ =
     errorlabstrm "field"
       (str "No field is declared for type" ++ spc() ++
       Printer.pr_lconstr_env env typ)
-
-let _ =
-  let init () = th_tab := Cmap.empty in
-  let freeze () = !th_tab in
-  let unfreeze fs = th_tab := fs in
-  Summary.declare_summary "field"
-    { Summary.freeze_function   = freeze;
-      Summary.unfreeze_function = unfreeze;
-      Summary.init_function     = init }
 
 let load_addfield _ = ()
 let cache_addfield (_,(typ,th)) = th_tab := Cmap.add typ th !th_tab
