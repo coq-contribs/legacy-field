@@ -149,7 +149,7 @@ let field g =
     with Hipattern.NoEquationFound | Exit ->
       error "The statement is not built from Leibniz' equality" in
   let th = Value.of_constr (lookup (pf_env g) typ) in
-  (interp_tac_gen [(id_of_string "FT",th)] [] (get_debug ())
+  (interp_tac_gen (Id.Map.singleton (id_of_string "FT") th) [] (get_debug ())
     <:tactic< match goal with |- (@eq _ _ _) => field_gen FT end >>) g
 
 (* Verifies that all the terms have the same type and gives the right theory *)
