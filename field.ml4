@@ -38,7 +38,7 @@ let constr_of_opt a opt =
   | None -> mkApp (init_constant "None",[|ac3|])
   | Some f -> mkApp (init_constant "Some",[|ac3;constr_of f|])
 
-module Cmap = Map.Make(struct type t = constr let compare = constr_ord end)
+module Cmap = Map.Make(Constr)
 
 (* Table of theories *)
 let th_tab = Summary.ref ~name:"field" (Cmap.empty : constr Cmap.t)
@@ -126,7 +126,7 @@ ARGUMENT EXTEND minus_div_arg
 | [ ] -> [ None, None ]
 END
 
-VERNAC COMMAND EXTEND Field
+VERNAC COMMAND EXTEND Field CLASSIFIED AS SIDEFF
   [ "Add" "Legacy" "Field"
       constr(a) constr(aplus) constr(amult) constr(aone)
       constr(azero) constr(aopp) constr(aeq)
