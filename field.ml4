@@ -149,8 +149,9 @@ let field g =
     with Hipattern.NoEquationFound | Exit ->
       error "The statement is not built from Leibniz' equality" in
   let th = Value.of_constr (lookup (pf_env g) typ) in
-  (interp_tac_gen (Id.Map.singleton (id_of_string "FT") th) [] (get_debug ())
-    <:tactic< match goal with |- (@eq _ _ _) => field_gen FT end >>) g
+  Proofview.V82.of_tactic
+    (interp_tac_gen (Id.Map.singleton (id_of_string "FT") th) [] (get_debug ())
+     <:tactic< match goal with |- (@eq _ _ _) => field_gen FT end >>) g
 
 (* Verifies that all the terms have the same type and gives the right theory *)
 let guess_theory env evc = function
@@ -172,12 +173,12 @@ let field_term l g =
   and nl = List.map (fun x -> valueIn (Value.of_constr x)) (Quote.sort_subterm g l) in
   (List.fold_right
     (fun c a ->
-     let tac = (Tacinterp.interp <:tactic<(Field_Term $th $c)>>) in
+     let tac = Proofview.V82.of_tactic (Tacinterp.interp <:tactic<(Field_Term $th $c)>>) in
      Tacticals.tclTHENFIRSTn tac [|a|]) nl Tacticals.tclIDTAC) g
 
 (* Declaration of Field *)
 
 TACTIC EXTEND legacy_field
-| [ "legacy" "field" ] -> [ field ]
-| [ "legacy" "field" ne_constr_list(l) ] -> [ field_term l ]
+| [ "legacy" "field" ] -> [ Proofview.V82.tactic field ]
+| [ "legacy" "field" ne_constr_list(l) ] -> [ Proofview.V82.tactic (field_term l) ]
 END
