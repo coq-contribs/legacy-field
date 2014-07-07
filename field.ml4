@@ -23,8 +23,10 @@ open Tacexpr
 open Mod_subst
 open Coqlib
 
+DECLARE PLUGIN "legacy_field_plugin"
+
 (* Interpretation of constr's *)
-let constr_of c = Constrintern.interp_constr Evd.empty (Global.env()) c
+let constr_of c = fst (Constrintern.interp_constr Evd.empty (Global.env()) c)
 
 (* Construction of constants *)
 let constant dir s = gen_constant_in_modules "Field" ["LegacyField"::dir] s

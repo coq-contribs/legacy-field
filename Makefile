@@ -46,10 +46,15 @@ TIMER=$(if $(TIMED), $(STDTIME), $(TIMECMD))
 #                        #
 ##########################
 
-OCAMLLIBS?=-I ../LegacyRing
-COQLIBS?=-I ../LegacyRing -R ../LegacyRing LegacyRing\
-  -R . LegacyField
-COQDOCLIBS?=-R ../LegacyRing LegacyRing\
+OCAMLLIBS?=-I ../LegacyRing\
+  -I .
+COQLIBS?=\
+  -R ../LegacyRing LegacyRing\
+  -R . LegacyField\
+  -I ../LegacyRing\
+  -I .
+COQDOCLIBS?=\
+  -R ../LegacyRing LegacyRing\
   -R . LegacyField
 
 ##########################
@@ -75,23 +80,23 @@ COQSRCLIBS?=-I "$(COQLIB)kernel" -I "$(COQLIB)lib" \
   -I "$(COQLIB)interp" -I "$(COQLIB)printing" -I "$(COQLIB)intf" \
   -I "$(COQLIB)proofs" -I "$(COQLIB)tactics" -I "$(COQLIB)tools" \
   -I "$(COQLIB)toplevel" -I "$(COQLIB)stm" -I "$(COQLIB)grammar" \
-    -I "$(COQLIB)/plugins/Derive" \
-    -I "$(COQLIB)/plugins/btauto" \
-    -I "$(COQLIB)/plugins/cc" \
-    -I "$(COQLIB)/plugins/decl_mode" \
-    -I "$(COQLIB)/plugins/extraction" \
-    -I "$(COQLIB)/plugins/firstorder" \
-    -I "$(COQLIB)/plugins/fourier" \
-    -I "$(COQLIB)/plugins/funind" \
-    -I "$(COQLIB)/plugins/micromega" \
-    -I "$(COQLIB)/plugins/nsatz" \
-    -I "$(COQLIB)/plugins/omega" \
-    -I "$(COQLIB)/plugins/quote" \
-    -I "$(COQLIB)/plugins/romega" \
-    -I "$(COQLIB)/plugins/rtauto" \
-    -I "$(COQLIB)/plugins/setoid_ring" \
-    -I "$(COQLIB)/plugins/syntax" \
-    -I "$(COQLIB)/plugins/xml"
+  -I "$(COQLIB)/plugins/Derive" \
+  -I "$(COQLIB)/plugins/btauto" \
+  -I "$(COQLIB)/plugins/cc" \
+  -I "$(COQLIB)/plugins/decl_mode" \
+  -I "$(COQLIB)/plugins/extraction" \
+  -I "$(COQLIB)/plugins/firstorder" \
+  -I "$(COQLIB)/plugins/fourier" \
+  -I "$(COQLIB)/plugins/funind" \
+  -I "$(COQLIB)/plugins/micromega" \
+  -I "$(COQLIB)/plugins/nsatz" \
+  -I "$(COQLIB)/plugins/omega" \
+  -I "$(COQLIB)/plugins/quote" \
+  -I "$(COQLIB)/plugins/romega" \
+  -I "$(COQLIB)/plugins/rtauto" \
+  -I "$(COQLIB)/plugins/setoid_ring" \
+  -I "$(COQLIB)/plugins/syntax" \
+  -I "$(COQLIB)/plugins/xml"
 ZFLAGS=$(OCAMLLIBS) $(COQSRCLIBS) -I $(CAMLP4LIB)
 
 CAMLC?=$(OCAMLC) -c -rectypes
@@ -104,7 +109,7 @@ CAMLP4EXTEND=pa_extend.cmo q_MLast.cmo pa_macro.cmo
 else
 CAMLP4EXTEND=
 endif
-PP?=-pp '$(CAMLP4O) -I $(CAMLLIB) -I . $(COQSRCLIBS) compat5.cmo \
+PP?=-pp '$(CAMLP4O) -I $(CAMLLIB) $(COQSRCLIBS) compat5.cmo \
   $(CAMLP4EXTEND) $(GRAMMARS) $(CAMLP4OPTIONS) -impl'
 
 ##################
@@ -291,55 +296,58 @@ Makefile: Make
 #                 #
 ###################
 
-%.cmo: %.ml4
+$(ML4FILES:.ml4=.cmo): %.cmo: %.ml4
 	$(CAMLC) $(ZDEBUG) $(ZFLAGS) $(PP) -impl $<
 
-%.cmx: %.ml4
+$(filter-out $(MLPACKFILES:.mlpack=.cmx),$(ML4FILES:.ml4=.cmx)): %.cmx: %.ml4
 	$(CAMLOPTC) $(ZDEBUG) $(ZFLAGS) $(PP) -impl $<
 
-%.ml4.d: %.ml4
+$(addsuffix .d,$(ML4FILES)): %.ml4.d: %.ml4
 	$(COQDEP) $(OCAMLLIBS) "$<" > "$@" || ( RV=$$?; rm -f "$@"; exit $${RV} )
 
-%.cmxs: %.cmxa
-	$(CAMLOPTLINK) $(ZDEBUG) $(ZFLAGS) -linkall -shared -o $@ $<
-
-%.cmxs: %.cmx
+$(filter-out $(MLLIBFILES:.mllib=.cmxs),$(MLFILES:.ml=.cmxs) $(ML4FILES:.ml4=.cmxs) $(MLPACKFILES:.mlpack=.cmxs)): %.cmxs: %.cmx
 	$(CAMLOPTLINK) $(ZDEBUG) $(ZFLAGS) -shared -o $@ $<
 
-%.cma: | %.mllib
+$(MLLIBFILES:.mllib=.cmxs): %.cmxs: %.cmxa
+	$(CAMLOPTLINK) $(ZDEBUG) $(ZFLAGS) -linkall -shared -o $@ $<
+
+$(MLLIBFILES:.mllib=.cma): %.cma: | %.mllib
 	$(CAMLLINK) $(ZDEBUG) $(ZFLAGS) -a -o $@ $^
 
-%.cmxa: | %.mllib
+$(MLLIBFILES:.mllib=.cmxa): %.cmxa: | %.mllib
 	$(CAMLOPTLINK) $(ZDEBUG) $(ZFLAGS) -a -o $@ $^
 
-%.mllib.d: %.mllib
-	$(COQDEP) $(COQLIBS) -c "$<" > "$@" || ( RV=$$?; rm -f "$@"; exit $${RV} )
+$(addsuffix .d,$(MLLIBFILES)): %.mllib.d: %.mllib
+	$(COQDEP) $(OCAMLLIBS) "$<" > "$@" || ( RV=$$?; rm -f "$@"; exit $${RV} )
 
-%.vo %.glob: %.v
+$(VOFILES): %.vo: %.v
 	$(COQC) $(COQDEBUG) $(COQFLAGS) $*
 
-%.vi: %.v
+$(GLOBFILES): %.glob: %.v
+	$(COQC) $(COQDEBUG) $(COQFLAGS) $*
+
+$(VFILES:.v=.vi): %.vi: %.v
 	$(COQC) -quick $(COQDEBUG) $(COQFLAGS) $*
 
-%.g: %.v
+$(GFILES): %.g: %.v
 	$(GALLINA) $<
 
-%.tex: %.v
+$(VFILES:.v=.tex): %.tex: %.v
 	$(COQDOC) $(COQDOCFLAGS) -latex $< -o $@
 
-%.html: %.v %.glob
+$(HTMLFILES): %.html: %.v %.glob
 	$(COQDOC) $(COQDOCFLAGS) -html $< -o $@
 
-%.g.tex: %.v
+$(VFILES:.v=.g.tex): %.g.tex: %.v
 	$(COQDOC) $(COQDOCFLAGS) -latex -g $< -o $@
 
-%.g.html: %.v %.glob
+$(GHTMLFILES): %.g.html: %.v %.glob
 	$(COQDOC) $(COQDOCFLAGS)  -html -g $< -o $@
 
-%.v.d: %.v
+$(addsuffix .d,$(VFILES)): %.v.d: %.v
 	$(COQDEP) $(COQLIBS) "$<" > "$@" || ( RV=$$?; rm -f "$@"; exit $${RV} )
 
-%.v.beautified:
+$(addsuffix .beautified,$(VFILES)): %.v.beautified:
 	$(COQC) $(COQDEBUG) $(COQFLAGS) -beautify $*
 
 # WARNING

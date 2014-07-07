@@ -1,3 +1,4 @@
+-I .
 -R . LegacyField
 -R ../LegacyRing LegacyRing
 -I ../LegacyRing
