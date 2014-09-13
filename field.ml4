@@ -26,7 +26,7 @@ open Coqlib
 DECLARE PLUGIN "legacy_field_plugin"
 
 (* Interpretation of constr's *)
-let constr_of c = fst (Constrintern.interp_constr Evd.empty (Global.env()) c)
+let constr_of c = fst (Constrintern.interp_constr (Global.env()) Evd.empty c)
 
 (* Construction of constants *)
 let constant dir s = gen_constant_in_modules "Field" ["LegacyField"::dir] s
@@ -45,12 +45,12 @@ module Cmap = Map.Make(Constr)
 (* Table of theories *)
 let th_tab = Summary.ref ~name:"field" (Cmap.empty : constr Cmap.t)
 
-let lookup env typ =
+let lookup env sigma typ =
   try Cmap.find typ !th_tab
   with Not_found ->
     errorlabstrm "field"
       (str "No field is declared for type" ++ spc() ++
-      Printer.pr_lconstr_env env typ)
+      Printer.pr_lconstr_env env sigma typ)
 
 let load_addfield _ = ()
 let cache_addfield (_,(typ,th)) = th_tab := Cmap.add typ th !th_tab
@@ -150,7 +150,7 @@ let field g =
       | _ -> raise Exit
     with Hipattern.NoEquationFound | Exit ->
       error "The statement is not built from Leibniz' equality" in
-  let th = Value.of_constr (lookup (pf_env g) typ) in
+  let th = Value.of_constr (lookup (pf_env g) (project g) typ) in
   Proofview.V82.of_tactic
     (interp_tac_gen (Id.Map.singleton (id_of_string "FT") th) [] (get_debug ())
      <:tactic< match goal with |- (@eq _ _ _) => field_gen FT end >>) g
@@ -163,7 +163,7 @@ let guess_theory env evc = function
       not (Reductionops.is_conv env evc t (type_of env evc c1))) tl then
       errorlabstrm "Field:" (str" All the terms must have the same type")
     else
-      lookup env t
+      lookup env evc t
   | [] -> anomaly ~label:"Field" (Pp.str "must have a non-empty constr list here")
 
 (* Guesses the type and calls Field_Term with the right theory *)
