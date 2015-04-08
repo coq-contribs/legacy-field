@@ -8,7 +8,7 @@
 
 Require Import List.
 Require Import Peano_dec.
-Require Import LegacyRing.
+From LegacyRing Require Import LegacyRing.
 Require Import LegacyField_Compl.
 
 Record Field_Theory : Type :=

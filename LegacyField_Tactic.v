@@ -7,7 +7,7 @@
 (************************************************************************)
 
 Require Import List.
-Require Import LegacyRing.
+From LegacyRing Require Import LegacyRing.
 Require Export LegacyField_Compl.
 Require Export LegacyField_Theory.
 
