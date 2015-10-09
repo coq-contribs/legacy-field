@@ -158,9 +158,9 @@ let field g =
 (* Verifies that all the terms have the same type and gives the right theory *)
 let guess_theory env evc = function
   | c::tl ->
-    let t = type_of env evc c in
+    let t = unsafe_type_of env evc c in
     if List.exists (fun c1 ->
-      not (Reductionops.is_conv env evc t (type_of env evc c1))) tl then
+      not (Reductionops.is_conv env evc t (unsafe_type_of env evc c1))) tl then
       errorlabstrm "Field:" (str" All the terms must have the same type")
     else
       lookup env evc t
