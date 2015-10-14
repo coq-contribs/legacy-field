@@ -26,7 +26,9 @@ open Coqlib
 DECLARE PLUGIN "legacy_field_plugin"
 
 (* Interpretation of constr's *)
-let constr_of c = fst (Constrintern.interp_constr (Global.env()) Evd.empty c)
+let constr_of c =
+  let env = Global.env() in
+  fst (Constrintern.interp_constr env (Evd.from_env env) c)
 
 (* Construction of constants *)
 let constant dir s = gen_constant_in_modules "Field" ["LegacyField"::dir] s
@@ -79,7 +81,8 @@ let add_field a aplus amult aone azero aopp aeq ainv aminus_o adiv_o rth
     let th = mkApp ((constant ["LegacyField_Theory"] "Build_Field_Theory"),
       [|a;aplus;amult;aone;azero;aopp;aeq;ainv;aminus_o;adiv_o;rth;ainv_l|]) in
     begin
-      let _ = type_of (Global.env ()) Evd.empty th in ();
+      let env = Global.env() in
+      let _ = type_of env (Evd.from_env env) th in ();
       Lib.add_anonymous_leaf (in_addfield (a,th))
     end
   end
