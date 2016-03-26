@@ -41,11 +41,11 @@ Lemma eqExprA_O : forall e1 e2:ExprA, {e1 = e2} + {e1 <> e2}.
 Proof.
   double induction e1 e2; try intros;
    try (left; reflexivity) || (try (right; discriminate)).
-  elim (H1 e0); intro y; elim (H2 e); intro y0;
+  elim (H1 e); intro y; elim (H2 e0); intro y0;
    try
     (left; rewrite y; rewrite y0; auto) ||
       (right; red; intro; inversion H3; auto).
-  elim (H1 e0); intro y; elim (H2 e); intro y0;
+  elim (H1 e); intro y; elim (H2 e0); intro y0;
    try
     (left; rewrite y; rewrite y0; auto) ||
       (right; red; intro; inversion H3; auto).

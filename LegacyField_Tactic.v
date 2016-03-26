@@ -18,18 +18,18 @@ Ltac get_component a s := eval cbv beta iota delta [a] in (a s).
 Ltac body_of s := eval cbv beta iota delta [s] in s.
 
 Ltac mem_assoc var lvar :=
-  match constr:lvar with
-  | nil => constr:false
+  match constr:(lvar) with
+  | nil => constr:(false)
   | ?X1 :: ?X2 =>
       match constr:(X1 = var) with
-      | (?X1 = ?X1) => constr:true
+      | (?X1 = ?X1) => constr:(true)
       | _ => mem_assoc var X2
       end
   end.
 
 Ltac number lvar :=
   let rec number_aux lvar cpt :=
-    match constr:lvar with
+    match constr:(lvar) with
     | (@nil ?X1) => constr:(@nil (prod X1 nat))
     | ?X2 :: ?X3 =>
         let l2 := number_aux X3 (S cpt) in
@@ -46,7 +46,7 @@ Ltac build_varlist FT trm :=
     with AmultT := get_component Amult FT
     with AoppT := get_component Aopp FT
     with AinvT := get_component Ainv FT in
-    match constr:trm with
+    match constr:(trm) with
     | AzeroT => lvar
     | AoneT => lvar
     | (AplusT ?X1 ?X2) =>
@@ -59,7 +59,7 @@ Ltac build_varlist FT trm :=
     | (AinvT ?X1) => seek_var lvar X1
     | ?X1 =>
         let res := mem_assoc X1 lvar in
-        match constr:res with
+        match constr:(res) with
         | true => lvar
         | false => constr:(X1 :: lvar)
         end
@@ -69,11 +69,11 @@ Ltac build_varlist FT trm :=
   number lvar.
 
 Ltac assoc elt lst :=
-  match constr:lst with
+  match constr:(lst) with
   | nil => fail
   | (?X1,?X2) :: ?X3 =>
       match constr:(elt = X1) with
-      | (?X1 = ?X1) => constr:X2
+      | (?X1 = ?X1) => constr:(X2)
       | _ => assoc elt X3
       end
   end.
@@ -86,9 +86,9 @@ Ltac interp_A FT lvar trm :=
   with AmultT := get_component Amult FT
   with AoppT := get_component Aopp FT
   with AinvT := get_component Ainv FT in
-  match constr:trm with
-  | AzeroT => constr:EAzero
-  | AoneT => constr:EAone
+  match constr:(trm) with
+  | AzeroT => constr:(EAzero)
+  | AoneT => constr:(EAone)
   | (AplusT ?X1 ?X2) =>
       let e1 := interp_A FT lvar X1 with e2 := interp_A FT lvar X2 in
       constr:(EAplus e1 e2)
@@ -111,14 +111,14 @@ Ltac interp_A FT lvar trm :=
 (**** Generation of the multiplier ****)
 
 Ltac remove e l :=
-  match constr:l with
+  match constr:(l) with
   | nil => l
-  | e :: ?X2 => constr:X2
+  | e :: ?X2 => constr:(X2)
   | ?X2 :: ?X3 => let nl := remove e X3 in constr:(X2 :: nl)
   end.
 
 Ltac union l1 l2 :=
-  match constr:l1 with
+  match constr:(l1) with
   | nil => l2
   | ?X2 :: ?X3 =>
       let nl2 := remove X2 l2 in
@@ -127,7 +127,7 @@ Ltac union l1 l2 :=
   end.
 
 Ltac raw_give_mult trm :=
-  match constr:trm with
+  match constr:(trm) with
   | (EAinv ?X1) => constr:(X1 :: nil)
   | (EAopp ?X1) => raw_give_mult X1
   | (EAplus ?X1 ?X2) =>
@@ -221,7 +221,7 @@ Ltac inverse_test_aux FT trm :=
   with AmultT := get_component Amult FT
   with AoppT := get_component Aopp FT
   with AinvT := get_component Ainv FT in
-  match constr:trm with
+  match constr:(trm) with
   | (AinvT _) => fail 1
   | (AoppT ?X1) =>
       strong_fail ltac:(inverse_test_aux FT X1; idtac)
@@ -314,7 +314,7 @@ Ltac init_exp FT trm :=
 (**** Inverses simplification ****)
 
 Ltac simpl_inv trm :=
-  match constr:trm with
+  match constr:(trm) with
   | (EAplus ?X1 ?X2) =>
       let e1 := simpl_inv X1 with e2 := simpl_inv X2 in
       constr:(EAplus e1 e2)
@@ -324,10 +324,10 @@ Ltac simpl_inv trm :=
   | (EAopp ?X1) => let e := simpl_inv X1 in
                    constr:(EAopp e)
   | (EAinv ?X1) => SimplInvAux X1
-  | ?X1 => constr:X1
+  | ?X1 => constr:(X1)
   end
  with SimplInvAux trm :=
-  match constr:trm with
+  match constr:(trm) with
   | (EAinv ?X1) => simpl_inv X1
   | (EAmult ?X1 ?X2) =>
       let e1 := simpl_inv (EAinv X1) with e2 := simpl_inv (EAinv X2) in
@@ -339,7 +339,7 @@ Ltac simpl_inv trm :=
 (**** Monom simplification ****)
 
 Ltac map_tactic fcn lst :=
-  match constr:lst with
+  match constr:(lst) with
   | nil => lst
   | ?X2 :: ?X3 =>
       let r := fcn X2 with t := map_tactic fcn X3 in
@@ -347,7 +347,7 @@ Ltac map_tactic fcn lst :=
   end.
 
 Ltac build_monom_aux lst trm :=
-  match constr:lst with
+  match constr:(lst) with
   | nil => eval compute in (assoc trm)
   | ?X1 :: ?X2 => build_monom_aux X2 (EAmult trm X1)
   end.
@@ -356,16 +356,16 @@ Ltac build_monom lnum lden :=
   let ildn := map_tactic ltac:(fun e => constr:(EAinv e)) lden in
   let ltot := eval compute in (app lnum ildn) in
   let trm := build_monom_aux ltot EAone in
-  match constr:trm with
-  | (EAmult _ ?X1) => constr:X1
-  | ?X1 => constr:X1
+  match constr:(trm) with
+  | (EAmult _ ?X1) => constr:(X1)
+  | ?X1 => constr:(X1)
   end.
 
 Ltac simpl_monom_aux lnum lden trm :=
-  match constr:trm with
+  match constr:(trm) with
   | (EAmult (EAinv ?X1) ?X2) =>
       let mma := mem_assoc X1 lnum in
-      match constr:mma with
+      match constr:(mma) with
       | true =>
           let newlnum := remove X1 lnum in
           simpl_monom_aux newlnum lden X2
@@ -373,7 +373,7 @@ Ltac simpl_monom_aux lnum lden trm :=
       end
   | (EAmult ?X1 ?X2) =>
       let mma := mem_assoc X1 lden in
-      match constr:mma with
+      match constr:(mma) with
       | true =>
           let newlden := remove X1 lden in
           simpl_monom_aux lnum newlden X2
@@ -381,7 +381,7 @@ Ltac simpl_monom_aux lnum lden trm :=
       end
   | (EAinv ?X1) =>
       let mma := mem_assoc X1 lnum in
-      match constr:mma with
+      match constr:(mma) with
       | true =>
           let newlnum := remove X1 lnum in
           build_monom newlnum lden
@@ -389,7 +389,7 @@ Ltac simpl_monom_aux lnum lden trm :=
       end
   | ?X1 =>
       let mma := mem_assoc X1 lden in
-      match constr:mma with
+      match constr:(mma) with
       | true =>
           let newlden := remove X1 lden in
           build_monom lnum newlden
@@ -400,7 +400,7 @@ Ltac simpl_monom_aux lnum lden trm :=
 Ltac simpl_monom trm := simpl_monom_aux (@nil ExprA) (@nil ExprA) trm.
 
 Ltac simpl_all_monomials trm :=
-  match constr:trm with
+  match constr:(trm) with
   | (EAplus ?X1 ?X2) =>
       let e1 := simpl_monom X1 with e2 := simpl_all_monomials X2 in
       constr:(EAplus e1 e2)
