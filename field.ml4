@@ -19,9 +19,12 @@ open Errors
 open Util
 open Vernacinterp
 open Vernacexpr
+open Misctypes
 open Tacexpr
 open Mod_subst
 open Coqlib
+open Constrarg
+open Pcoq.Constr
 
 DECLARE PLUGIN "legacy_field_plugin"
 
@@ -141,6 +144,11 @@ VERNAC COMMAND EXTEND Field CLASSIFIED AS SIDEFF
            (constr_of_opt a adiv_o) (constr_of rth) (constr_of ainv_l) ]
 END
 
+let get_tactic name =
+  let dp = ["LegacyField_Tactic"; "LegacyField"] in
+  let dp = DirPath.make (List.map Id.of_string dp) in
+  (Loc.ghost, KerName.make2 (MPfile dp) (Label.make name))
+
 (* Guesses the type and calls field_gen with the right theory *)
 let field g =
   Coqlib.check_required_library ["LegacyField";"LegacyField"];
@@ -151,16 +159,19 @@ let field g =
     with Hipattern.NoEquationFound | Exit ->
       error "The statement is not built from Leibniz' equality" in
   let th = Value.of_constr (lookup (pf_env g) (project g) typ) in
-  Proofview.V82.of_tactic
-    (interp_tac_gen (Id.Map.singleton (id_of_string "FT") th) [] (get_debug ())
-     <:tactic< match goal with |- (@eq _ _ _) => field_gen FT end >>) g
+  let tac = get_tactic "field_gen" in
+  let ft = id_of_string "FT" in
+  let tac = TacCall (Loc.ghost, ArgArg tac, [Reference (ArgVar (Loc.ghost, ft))]) in
+  let ist = { (default_ist ()) with lfun = Id.Map.singleton ft th } in
+  Proofview.V82.of_tactic (eval_tactic_ist ist (TacArg (Loc.ghost, tac))) g
 
 (* Verifies that all the terms have the same type and gives the right theory *)
 let guess_theory env evc = function
   | c::tl ->
-    let t = type_of env evc c in
+    let (evc, t) = type_of env evc c in
     if List.exists (fun c1 ->
-      not (Reductionops.is_conv env evc t (type_of env evc c1))) tl then
+      let (evc, t1) = type_of env evc c1 in
+      not (Reductionops.is_conv env evc t t1)) tl then
       errorlabstrm "Field:" (str" All the terms must have the same type")
     else
       lookup env evc t
@@ -171,11 +182,17 @@ let field_term l g =
   Coqlib.check_required_library ["LegacyField";"LegacyField"];
   let env = (pf_env g)
   and evc = (project g) in
-  let th = valueIn (Value.of_constr (guess_theory env evc l))
-  and nl = List.map (fun x -> valueIn (Value.of_constr x)) (Quote.sort_subterm g l) in
+  let th = Value.of_constr (guess_theory env evc l)
+  and nl = List.map (fun x -> Value.of_constr x) (Quote.sort_subterm g l) in
   (List.fold_right
     (fun c a ->
-     let tac = Proofview.V82.of_tactic (Tacinterp.interp <:tactic<(Field_Term $th $c)>>) in
+     let tac = get_tactic "field_term" in
+     let ft = id_of_string "FT" in
+     let cn = id_of_string "c" in
+     let args = List.map (fun v -> Reference (ArgVar (Loc.ghost, v))) [ft; cn] in
+     let tac = TacCall (Loc.ghost, ArgArg tac, args) in
+     let ist = { (default_ist ()) with lfun = Id.Map.add cn c (Id.Map.singleton ft th) } in
+     let tac = Proofview.V82.of_tactic (eval_tactic_ist ist (TacArg (Loc.ghost, tac))) in
      Tacticals.tclTHENFIRSTn tac [|a|]) nl Tacticals.tclIDTAC) g
 
 (* Declaration of Field *)
