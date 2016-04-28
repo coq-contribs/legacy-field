@@ -1,4 +1,4 @@
 [submodule "legacy-ring"]
 	path = legacy-ring
-	url = https://scm.gforge.inria.fr/anonscm/git/coq-contribs/legacy-ring.git
+	url = https://github.com/coq-contribs/legacy-ring.git
 	branch = trunk
