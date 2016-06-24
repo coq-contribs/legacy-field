@@ -1,7 +1,6 @@
 -I .
 -R . LegacyField
--R legacy-ring LegacyRing
--I legacy-ring
+-I "${COQLIB}/user-contrib/LegacyRing"
 field.ml4
 legacy_field_plugin.mllib
 LegacyField_Compl.v

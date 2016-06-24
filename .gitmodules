@@ -1,4 +1,0 @@
-[submodule "legacy-ring"]
-	path = legacy-ring
-	url = https://github.com/coq-contribs/legacy-ring.git
-	branch = trunk
