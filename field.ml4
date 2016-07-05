@@ -15,7 +15,7 @@ open Tacinterp
 open Tacmach
 open Term
 open Typing
-open Errors
+open CErrors
 open Util
 open Vernacinterp
 open Vernacexpr
@@ -77,12 +77,15 @@ let add_field a aplus amult aone azero aopp aeq ainv aminus_o adiv_o rth
   begin
     (try
       Ring.add_theory true true false a None None None aplus amult aone azero
-        (Some aopp) aeq rth Quote.ConstrSet.empty
+        (Some aopp) aeq rth Quote_plugin.Quote.ConstrSet.empty
      with | UserError("Add Semi Ring",_) -> ());
     let th = mkApp ((constant ["LegacyField_Theory"] "Build_Field_Theory"),
       [|a;aplus;amult;aone;azero;aopp;aeq;ainv;aminus_o;adiv_o;rth;ainv_l|]) in
     begin
-      let _ = type_of (Global.env ()) Evd.empty th in ();
+      let env = Global.env () in
+      let evd = Evd.from_env env in
+      let evd, _ = type_of env evd th in
+      Global.push_context false (snd (Evd.universe_context evd));
       Lib.add_anonymous_leaf (in_addfield (a,th))
     end
   end
@@ -183,7 +186,7 @@ let field_term l g =
   let env = (pf_env g)
   and evc = (project g) in
   let th = Value.of_constr (guess_theory env evc l)
-  and nl = List.map (fun x -> Value.of_constr x) (Quote.sort_subterm g l) in
+  and nl = List.map (fun x -> Value.of_constr x) (Quote_plugin.Quote.sort_subterm g l) in
   (List.fold_right
     (fun c a ->
      let tac = get_tactic "field_term" in
