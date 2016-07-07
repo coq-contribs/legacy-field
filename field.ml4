@@ -29,7 +29,9 @@ open Pcoq.Constr
 DECLARE PLUGIN "legacy_field_plugin"
 
 (* Interpretation of constr's *)
-let constr_of c = fst (Constrintern.interp_constr (Global.env()) Evd.empty c)
+let constr_of c =
+  let env = Global.env() in
+  fst (Constrintern.interp_constr env (Evd.from_env env) c)
 
 (* Construction of constants *)
 let constant dir s = gen_constant_in_modules "Field" ["LegacyField"::dir] s
