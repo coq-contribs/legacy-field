@@ -53,7 +53,7 @@ let th_tab = Summary.ref ~name:"field" (Cmap.empty : constr Cmap.t)
 let lookup env sigma typ =
   try Cmap.find typ !th_tab
   with Not_found ->
-    errorlabstrm "field"
+    user_err ~hdr:"field"
       (str "No field is declared for type" ++ spc() ++
       Printer.pr_lconstr_env env sigma typ)
 
@@ -80,7 +80,7 @@ let add_field a aplus amult aone azero aopp aeq ainv aminus_o adiv_o rth
     (try
       Ring.add_theory true true false a None None None aplus amult aone azero
         (Some aopp) aeq rth Quote_plugin.Quote.ConstrSet.empty
-     with | UserError("Add Semi Ring",_) -> ());
+     with | UserError(Some "Add Semi Ring",_) -> ());
     let th = mkApp ((constant ["LegacyField_Theory"] "Build_Field_Theory"),
       [|a;aplus;amult;aone;azero;aopp;aeq;ainv;aminus_o;adiv_o;rth;ainv_l|]) in
     begin
@@ -177,7 +177,7 @@ let guess_theory env evc = function
     if List.exists (fun c1 ->
       let (evc, t1) = type_of env evc c1 in
       not (Reductionops.is_conv env evc t t1)) tl then
-      errorlabstrm "Field:" (str" All the terms must have the same type")
+      user_err ~hdr:"Field:" (str" All the terms must have the same type")
     else
       lookup env evc t
   | [] -> anomaly ~label:"Field" (Pp.str "must have a non-empty constr list here")
