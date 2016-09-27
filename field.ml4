@@ -23,7 +23,7 @@ open Misctypes
 open Tacexpr
 open Mod_subst
 open Coqlib
-open Constrarg
+open Stdarg
 open Pcoq.Constr
 
 DECLARE PLUGIN "legacy_field_plugin"
