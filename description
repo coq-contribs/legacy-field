@@ -1,6 +1,12 @@
 Name: LegacyField
-Title: The former implementation of the field tactic
-Author: David Delahaye and Micaela Mayero (?)
+Title: The initial implementation of the field tactic
+Author: David Delahaye and Micaela Mayero
 Institution: INRIA Rocquencourt
+Date: 2001-4
 Require: LegacyRing
-Description:
+Description: Tactics for deciding equality and simplifying polynomial
+  fractions over commutative fields.
+Category: Mathematics/Arithmetic and Number Theory/Rational numbers
+Category: Miscellaneous/Coq Extensions
+Category: Computer Science/Decision Procedures
+Status: Unmaintained
